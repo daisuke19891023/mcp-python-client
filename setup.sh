@@ -98,6 +98,7 @@ success "README.mdが更新されました"
 info ".cursor/rulesを更新しています..."
 sed -i "s/{{PROJECT_NAME}}/$PROJECT_NAME/g" .cursor/rules
 sed -i "s/{{PROJECT_DESCRIPTION}}/$PROJECT_DESCRIPTION/g" .cursor/rules
+sed -i "s/{{PROJECT_NAME_SLUG}}/$PROJECT_NAME_SLUG/g" .cursor/rules
 success ".cursor/rulesが更新されました"
 
 info "pyproject.tomlを更新しています..."
