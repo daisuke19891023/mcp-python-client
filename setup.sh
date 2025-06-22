@@ -28,7 +28,22 @@ source ./license_utils.sh
 
 # --- Interactive Prompts ---
 info "プロジェクト情報を入力してください:"
-read -p "プロジェクト名: " PROJECT_NAME
+
+# Input validation for PROJECT_NAME (Python package name format)
+while true; do
+    read -p "プロジェクト名 (例: my-project, my_project, myproject): " PROJECT_NAME
+    if [[ -z "$PROJECT_NAME" ]]; then
+        echo "エラー: プロジェクト名は空にできません。"
+    elif ! [[ "$PROJECT_NAME" =~ ^[a-zA-Z][a-zA-Z0-9_-]*$ ]]; then
+        echo "エラー: プロジェクト名が無効です。"
+        echo "   - 英数字、ハイフン(-)、アンダースコア(_)のみ使用可能"
+        echo "   - 先頭は英字である必要があります"
+        echo "   - 例: my-project, my_project, myproject"
+    else
+        break
+    fi
+done
+
 read -p "プロジェクトの説明: " PROJECT_DESCRIPTION
 
 # Input validation for LIBRARY_NAME
@@ -66,7 +81,6 @@ touch "src/$LIBRARY_NAME/__init__.py"
 
 # Create main.py file for the library
 cat > "src/$LIBRARY_NAME/main.py" << EOF
-#!/usr/bin/env python3
 """Main entry point for $PROJECT_NAME."""
 
 import sys
@@ -94,6 +108,12 @@ sed -i "s/{{PROJECT_DESCRIPTION}}/$PROJECT_DESCRIPTION/g" README.md
 sed -i "s/{{LICENSE_TYPE}}/$LICENSE_TYPE/g" README.md
 sed -i "s/{{PROJECT_NAME_SLUG}}/$PROJECT_NAME_SLUG/g" README.md
 success "README.mdが更新されました"
+
+info ".cursor/rulesを更新しています..."
+sed -i "s/{{PROJECT_NAME}}/$PROJECT_NAME/g" .cursor/rules
+sed -i "s/{{PROJECT_DESCRIPTION}}/$PROJECT_DESCRIPTION/g" .cursor/rules
+sed -i "s/{{PROJECT_NAME_SLUG}}/$PROJECT_NAME_SLUG/g" .cursor/rules
+success ".cursor/rulesが更新されました"
 
 info "pyproject.tomlを更新しています..."
 sed -i "s/{{PROJECT_NAME}}/$PROJECT_NAME/g" pyproject.toml
@@ -138,6 +158,42 @@ if ! command_exists uv; then
     success "uvがインストールされました"
 else
     info "uvは既にインストールされています"
+fi
+
+# Install Node.js if not already installed
+if ! command_exists node; then
+    info "Node.jsをインストールしています..."
+    # Check if we're on Ubuntu/Debian
+    if command_exists apt; then
+        # Install Node.js using NodeSource repository
+        curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - || error "NodeSourceリポジトリの設定に失敗しました"
+        sudo apt-get install -y nodejs || error "Node.jsのインストールに失敗しました"
+    elif command_exists brew; then
+        # macOS with Homebrew
+        brew install node || error "Node.jsのインストールに失敗しました"
+    elif command_exists yum; then
+        # CentOS/RHEL/Fedora
+        curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash - || error "NodeSourceリポジトリの設定に失敗しました"
+        sudo yum install -y nodejs || error "Node.jsのインストールに失敗しました"
+    else
+        error "サポートされていないOSです。手動でNode.jsをインストールしてください。"
+    fi
+    success "Node.jsがインストールされました"
+else
+    info "Node.jsは既にインストールされています"
+fi
+
+# Install Claude Code if not already installed
+if ! command_exists claude-code; then
+    info "Claude Codeをインストールしています..."
+    # npmの権限問題を解決するため、グローバルディレクトリをユーザーディレクトリに設定
+    mkdir -p "$HOME/.npm-global"
+    npm config set prefix "$HOME/.npm-global"
+    export PATH="$HOME/.npm-global/bin:$PATH"
+    npm install -g @anthropic-ai/claude-code || error "Claude Codeのインストールに失敗しました"
+    success "Claude Codeがインストールされました"
+else
+    info "Claude Codeは既にインストールされています"
 fi
 
 # Install target Python version (uncomment and replace X.X with desired version)

@@ -1,0 +1,876 @@
+# CLAUDE.md - Python Development Project Standards
+
+## Project Overview
+
+This project uses Python 3.10+ and is built with the following technology stack:
+- **Web Framework**: FastAPI (https://fastapi.tiangolo.com/)
+- **Testing Framework**: pytest (https://docs.pytest.org/)
+- **Dependency Management**: uv (https://github.com/astral-sh/uv)
+- **Task Runner**: nox (https://nox.thea.codes/)
+- **Code Quality Management**: Ruff (https://docs.astral.sh/ruff/), Pyright (https://github.com/microsoft/pyright)
+- **Validation**: Pydantic (https://docs.pydantic.dev/)
+- **Version Control**: Git
+
+## Essential Reference Resources
+
+**YOU MUST** refer to the following official documentation during implementation:
+- Python Official: https://docs.python.org/3/
+- FastAPI: https://fastapi.tiangolo.com/
+- Pydantic v2: https://docs.pydantic.dev/latest/
+- pytest: https://docs.pytest.org/en/stable/
+- uv: https://github.com/astral-sh/uv#documentation
+- nox: https://nox.thea.codes/en/stable/
+
+## Development Environment and Tools
+
+### Dependency Management (uv)
+**CRITICAL**: Use `uv` for all dependency management. `pip` and `poetry` are PROHIBITED.
+
+```bash
+# Project initialization
+uv init
+
+# Add dependency
+uv add <package>
+
+# Add development dependency
+uv add --dev <package>
+
+# Install dependencies
+uv sync
+
+# Execute command in virtual environment
+uv run <command>
+```
+
+### Task Execution (nox)
+**YOU MUST** execute all tools through `nox` sessions:
+
+```bash
+# List available sessions
+nox --list
+
+# Execute specific session
+nox -s <session_name>
+
+# Examples:
+nox -s test          # Run tests
+nox -s format        # Code formatting
+nox -s lint          # Linting
+nox -s typecheck     # Type checking
+nox -s coverage      # Coverage measurement
+```
+
+### Project Structure
+**NEVER** deviate from this structure:
+```
+project_root/
+├── .claude/              # Claude Code specific settings
+│   └── commands/         # Custom commands
+├── .github/              # GitHub Actions
+│   └── workflows/
+├── src/                  # Application code
+│   └── <package_name>/
+├── tests/                # Test code
+│   ├── unit/            # Unit tests
+│   ├── api/             # API tests
+│   └── e2e/             # E2E tests
+├── docs/                 # Documentation
+├── .gitignore
+├── CLAUDE.md            # This file
+├── CLAUDE.local.md      # Local-only settings (Git excluded)
+├── PROGRESS.md          # Development progress record
+├── pyproject.toml       # Project configuration
+├── noxfile.py           # nox task definitions
+└── README.md
+```
+
+## Development Workflow - 4-Phase Approach
+
+### CRITICAL: All new features and bug fixes MUST follow these 4 phases
+
+#### Phase 1: Explore - Information Gathering
+**DO NOT** modify code in this phase.
+
+Activities:
+1. Read related files (`src/`, `tests/`, `pyproject.toml`)
+2. Understand existing implementation patterns
+3. Check dependencies
+4. Identify scope of impact
+
+Completion confirmation:
+```
+"Exploration phase completed. Confirmed the following:
+- Related files: [file list]
+- Existing patterns: [pattern overview]
+- Impact scope: [affected areas]"
+```
+
+#### Phase 2: Plan - Implementation Design
+**YOU MUST** create a plan in the following format:
+
+```markdown
+## Implementation Plan: [Feature Name/Bug Fix Name]
+
+### 1. Overview
+[What to implement/fix]
+
+### 2. File Changes
+- New files:
+  - `path/to/new/file.py` - [purpose]
+- Modifications:
+  - `path/to/existing/file.py` - [change details]
+
+### 3. Test Plan (Implementation Order)
+1. E2E Tests (Most abstract):
+   - `test_user_complete_journey` - Complete user flow from registration to deletion
+2. API Tests (Middle layer):
+   - `test_create_user_endpoint` - User creation API
+   - `test_get_user_endpoint` - User retrieval API
+3. Unit Tests (Most concrete):
+   - `test_user_model_validation` - Model validation
+   - `test_user_service_create` - Service layer logic
+
+### 4. Implementation Order
+1. Create test cases (E2E → API → Unit)
+2. Implementation (Unit → API → E2E)
+3. Verify all tests pass
+4. Refactoring
+5. Documentation update
+```
+
+#### Phase 3: Implement - Execute TDD
+**NEVER** start implementation without writing tests first.
+
+#### Phase 4: Commit - Record Changes
+**YOU MUST** commit only after all checks are completed.
+
+## Strict Test-Driven Development (TDD) Implementation
+
+### CRITICAL: Test Creation and Implementation Order
+
+**Test Creation Order** (Abstract → Concrete):
+1. **E2E Tests** - Define system-wide behavior
+2. **API Tests** - Define endpoint-level specifications
+3. **Unit Tests** - Define detailed specifications for individual components
+
+**Implementation Order** (Concrete → Abstract):
+1. **Unit Implementation** - Models, services, utilities
+2. **API Implementation** - Endpoints, middleware
+3. **Integration** - Combine everything to pass E2E tests
+
+### Test Cheating Prevention Rules
+
+**CRITICAL - The following are ABSOLUTELY PROHIBITED**:
+```python
+# ❌ Prohibited Example 1: Hardcoding just to pass tests
+def calculate_total(items):
+    # NEVER DO THIS
+    if items == [{"price": 100}, {"price": 200}]:
+        return 300  # Hardcoded expected value from test case
+
+# ❌ Prohibited Example 2: Special handling only for tests
+def process_order(order_id):
+    # NEVER DO THIS
+    if order_id == "test_order_123":  # Special treatment for test data
+        return {"status": "success"}
+
+# ❌ Prohibited Example 3: Cheating with log output
+def validate_input(data):
+    # NEVER DO THIS
+    print("Validation passed!")  # Just log output without actual validation
+    return True
+```
+
+**✅ Correct Implementation Examples**:
+```python
+# Correct implementation: Properly implement logic
+def calculate_total(items):
+    return sum(item.get("price", 0) for item in items)
+
+# Temporary debug during development (remove after completion)
+def complex_calculation(data):
+    print(f"DEBUG: Input data: {data}")  # Temporary debug
+    result = perform_calculation(data)
+    print(f"DEBUG: Result: {result}")    # Temporary debug
+    # TODO: Remove above print statements after debugging completion
+    return result
+```
+
+### Detailed TDD Implementation Steps
+
+#### Step 1: Start with E2E Tests
+```python
+# tests/e2e/test_product_management.py
+import pytest
+from fastapi.testclient import TestClient
+
+class TestProductManagement:
+    """Complete workflow test for product management"""
+
+    def test_complete_product_lifecycle(self, client, auth_headers):
+        """Complete lifecycle from product creation to deletion"""
+        # 1. Create product
+        create_response = client.post(
+            "/api/v1/products",
+            json={
+                "name": "Test Product",
+                "price": 1000,
+                "stock": 100
+            },
+            headers=auth_headers
+        )
+        assert create_response.status_code == 201
+        product_id = create_response.json()["id"]
+
+        # 2. Get product information
+        get_response = client.get(f"/api/v1/products/{product_id}")
+        assert get_response.status_code == 200
+        assert get_response.json()["name"] == "Test Product"
+
+        # 3. Update stock
+        update_response = client.patch(
+            f"/api/v1/products/{product_id}",
+            json={"stock": 50},
+            headers=auth_headers
+        )
+        assert update_response.status_code == 200
+
+        # 4. Delete product
+        delete_response = client.delete(
+            f"/api/v1/products/{product_id}",
+            headers=auth_headers
+        )
+        assert delete_response.status_code == 204
+```
+
+#### Step 2: Add API Tests
+```python
+# tests/api/test_products_api.py
+class TestProductsAPI:
+    """Individual endpoint tests for product API"""
+
+    def test_create_product_validates_input(self, client, auth_headers):
+        """Input validation during product creation"""
+        # Request with invalid data
+        response = client.post(
+            "/api/v1/products",
+            json={
+                "name": "",  # Empty name
+                "price": -100  # Negative price
+            },
+            headers=auth_headers
+        )
+        assert response.status_code == 422
+        errors = response.json()["detail"]
+        assert any(error["loc"] == ["body", "name"] for error in errors)
+        assert any(error["loc"] == ["body", "price"] for error in errors)
+```
+
+#### Step 3: Add Unit Tests
+```python
+# tests/unit/test_product_model.py
+from src.models.product import Product
+from pydantic import ValidationError
+
+class TestProductModel:
+    """Unit tests for product model"""
+
+    def test_product_creation_with_valid_data(self):
+        """Product creation with valid data"""
+        product = Product(
+            name="Test Product",
+            price=1000,
+            stock=100
+        )
+        assert product.name == "Test Product"
+        assert product.price == 1000
+        assert product.stock == 100
+
+    def test_product_validation_errors(self):
+        """Validation error confirmation"""
+        with pytest.raises(ValidationError) as exc_info:
+            Product(name="", price=-100, stock=-10)
+
+        errors = exc_info.value.errors()
+        assert len(errors) == 3
+```
+
+#### Step 4: Implementation (Unit → API → Integration)
+```python
+# 1. First unit implementation (src/models/product.py)
+from pydantic import BaseModel, Field, field_validator
+
+class Product(BaseModel):
+    """Product model"""
+    name: str = Field(..., min_length=1, max_length=100)
+    price: float = Field(..., gt=0)
+    stock: int = Field(..., ge=0)
+
+    @field_validator("name")
+    @classmethod
+    def name_must_not_be_empty(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("Product name cannot be empty")
+        return v.strip()
+
+# 2. Then API implementation (src/api/v1/products.py)
+from fastapi import APIRouter, Depends, HTTPException
+from src.models.product import Product
+from src.services.product_service import ProductService
+
+router = APIRouter()
+
+@router.post("/", status_code=201)
+async def create_product(
+    product: Product,
+    service: ProductService = Depends(),
+    current_user: User = Depends(get_current_user)
+):
+    """Create product"""
+    return await service.create_product(product, current_user)
+
+# 3. Finally integrate everything and confirm E2E tests pass
+```
+
+### Debug Log Management
+
+**Temporary debugging is allowed, but MUST be removed**:
+```python
+# During debugging (temporarily added)
+def complex_business_logic(data):
+    print(f"=== DEBUG START ===")
+    print(f"Input: {data}")
+
+    intermediate_result = step1(data)
+    print(f"After step1: {intermediate_result}")
+
+    final_result = step2(intermediate_result)
+    print(f"Final result: {final_result}")
+    print(f"=== DEBUG END ===")
+
+    return final_result
+
+# After debugging completion (MUST be removed)
+def complex_business_logic(data):
+    intermediate_result = step1(data)
+    final_result = step2(intermediate_result)
+    return final_result
+```
+
+**Debug Log Removal Checklist**:
+- [ ] Remove all print statements
+- [ ] Remove console.log equivalent outputs
+- [ ] Remove commented-out debug code
+- [ ] Resolve TODO/FIXME comments
+
+## Code Quality Standards
+
+### Type Checking with Pyright
+**YOU MUST** ensure all code passes Pyright's `strict` mode without errors:
+
+```python
+# pyrightconfig.json configuration example
+{
+    "include": ["src", "tests"],
+    "exclude": ["**/__pycache__"],
+    "typeCheckingMode": "strict",
+    "pythonVersion": "3.10",
+    "reportUnknownMemberType": false,
+    "reportUnknownArgumentType": false
+}
+```
+
+Type annotation examples:
+```python
+from typing import Optional, List, Dict, Any, TypeVar, Generic
+from pydantic import BaseModel, Field, ConfigDict
+
+T = TypeVar("T")
+
+class PaginatedResponse(BaseModel, Generic[T]):
+    """Pagination response"""
+    model_config = ConfigDict(from_attributes=True)
+
+    items: List[T]
+    total: int
+    page: int = Field(..., ge=1)
+    per_page: int = Field(..., ge=1, le=100)
+
+    @property
+    def total_pages(self) -> int:
+        """Calculate total pages"""
+        return (self.total + self.per_page - 1) // self.per_page
+```
+
+### Formatting and Linting with Ruff
+Configuration in `pyproject.toml`:
+```toml
+[tool.ruff]
+target-version = "py310"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "B", "I", "N", "UP", "S", "A", "C4", "DTZ", "ISC", "PIE", "PT", "RET", "SIM", "TCH", "ARG", "PTH"]
+ignore = ["E501"]  # Controlled by line-length
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+```
+
+## Git Operation Rules
+
+### Strict Application of Conventional Commits
+**NEVER** use non-standard commit messages.
+
+Format:
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+Specific examples:
+```bash
+# Feature addition
+feat(auth): implement JWT authentication feature
+
+- Issue and refresh token generation
+- Token validation middleware addition
+- Authentication error handling implementation
+
+Closes #123
+
+# Bug fix
+fix(api): fix foreign key constraint error on user deletion
+
+Modified to delete related profile information first
+
+# Test addition
+test(product): implement E2E/API/unit tests for product management
+
+- E2E test: Complete product lifecycle
+- API test: Validation of each endpoint
+- Unit test: Model and service logic
+```
+
+### Branch Strategy
+```bash
+# Branch creation examples
+git checkout -b feature/123-user-authentication
+git checkout -b fix/456-database-connection-error
+git checkout -b test/789-increase-coverage
+```
+
+## Progress Management and Documentation
+
+### PROGRESS.md Recording Format
+**YOU MUST** record in the following format at the end of each work session:
+
+```markdown
+## 2024-01-20 - Product Management Feature Implementation
+
+### Completed Phases
+- [x] Explore: Investigated existing model structure and API patterns
+- [x] Plan: Created test plan in E2E→API→Unit order
+- [x] Implement: Implemented features with TDD (tests: E2E→API→Unit, implementation: Unit→API→E2E)
+- [x] Commit: Committed with feat(product)
+
+### Implementation Details
+#### Test Creation Order
+1. `tests/e2e/test_product_management.py` - Complete product lifecycle
+2. `tests/api/test_products_api.py` - Individual endpoints
+3. `tests/unit/test_product_model.py` - Model validation
+4. `tests/unit/test_product_service.py` - Business logic
+
+#### Implementation Order
+1. `src/models/product.py` - Pydantic model
+2. `src/services/product_service.py` - Business logic
+3. `src/api/v1/products.py` - API endpoints
+4. Integration and all tests pass
+
+#### Test Results
+```
+===== test session starts =====
+collected 25 items
+tests/e2e/test_product_management.py::test_complete_product_lifecycle PASSED
+tests/api/test_products_api.py::test_create_product_validates_input PASSED
+tests/unit/test_product_model.py::test_product_creation_with_valid_data PASSED
+...
+===== 25 passed in 1.23s =====
+
+Coverage report:
+src/models/product.py      100%
+src/services/product_service.py   98%
+src/api/v1/products.py     100%
+Overall coverage: 99%
+```
+
+### Debug Log Removal Confirmation
+- [x] Removed all temporary print statements
+- [x] Removed debug comments
+- [x] Resolved TODO/FIXME
+
+### Issues and Solutions
+- Issue: Race condition from concurrent stock updates
+- Solution: Implemented database transactions and locking mechanism
+
+### Next Tasks
+- [ ] Implement product search functionality
+- [ ] Add stock alert functionality
+- [ ] Create performance tests
+
+### Learning Notes
+- Advanced validation using Pydantic's field_validator
+- Service layer injection pattern using FastAPI Dependency
+- Writing tests in E2E→API→Unit order promoted specification clarification
+```
+
+## noxfile.py Configuration Example
+
+```python
+# noxfile.py
+import nox
+from pathlib import Path
+
+# Project root
+PROJECT_ROOT = Path(__file__).parent
+
+@nox.session(python="3.10")
+def test(session):
+    """Run tests"""
+    session.run("uv", "sync", external=True)
+    args = session.posargs or ["tests/"]
+    session.run("uv", "run", "pytest", *args)
+
+@nox.session(python="3.10")
+def test_e2e(session):
+    """Run E2E tests only"""
+    session.run("uv", "sync", external=True)
+    session.run("uv", "run", "pytest", "tests/e2e/", "-v")
+
+@nox.session(python="3.10")
+def test_api(session):
+    """Run API tests only"""
+    session.run("uv", "sync", external=True)
+    session.run("uv", "run", "pytest", "tests/api/", "-v")
+
+@nox.session(python="3.10")
+def test_unit(session):
+    """Run unit tests only"""
+    session.run("uv", "sync", external=True)
+    session.run("uv", "run", "pytest", "tests/unit/", "-v")
+
+@nox.session(python="3.10")
+def format(session):
+    """Format code"""
+    session.run("uv", "sync", external=True)
+    session.run("uv", "run", "ruff", "format", ".")
+
+@nox.session(python="3.10")
+def lint(session):
+    """Run linting"""
+    session.run("uv", "sync", external=True)
+    session.run("uv", "run", "ruff", "check", ".", "--fix")
+
+@nox.session(python="3.10")
+def typecheck(session):
+    """Run type checking"""
+    session.run("uv", "sync", external=True)
+    session.run("uv", "run", "pyright", "src", "tests")
+
+@nox.session(python="3.10")
+def coverage(session):
+    """Measure coverage"""
+    session.run("uv", "sync", external=True)
+    session.run(
+        "uv", "run", "pytest",
+        "--cov=src",
+        "--cov-report=html",
+        "--cov-report=term-missing",
+        "--cov-fail-under=90"  # Error if below 90%
+    )
+
+@nox.session(python="3.10")
+def clean_debug(session):
+    """Check for debug code"""
+    # Detect print statements
+    session.run(
+        "grep", "-r", "print(", "src/",
+        external=True,
+        success_codes=[0, 1]  # Success even if not found
+    )
+```
+
+## Quality Assurance Checklist
+
+### Pre-commit Mandatory Checks
+```bash
+# Run all checks at once
+nox
+
+# Stepwise test execution (recommended)
+nox -s test_unit     # First unit tests
+nox -s test_api      # Then API tests
+nox -s test_e2e      # Finally E2E tests
+
+# Quality checks
+nox -s format        # Formatting
+nox -s lint          # Linting
+nox -s typecheck     # Type checking
+nox -s coverage      # Coverage (90%+ required)
+nox -s clean_debug   # Debug code detection
+```
+
+### Pre-Pull Request Checklist
+- [ ] All nox sessions pass
+- [ ] Test coverage is 90%+
+- [ ] Debug logs removed
+- [ ] PROGRESS.md updated
+- [ ] 3-layer tests (E2E/API/Unit) added for new features
+- [ ] Breaking changes documented if any
+
+## Error Handling
+
+### Custom Exception Usage
+```python
+# src/core/exceptions.py
+from fastapi import HTTPException
+from typing import Any, Dict, Optional
+
+class AppException(HTTPException):
+    """Application base exception"""
+    def __init__(
+        self,
+        status_code: int,
+        detail: str,
+        headers: Optional[Dict[str, Any]] = None
+    ):
+        super().__init__(status_code=status_code, detail=detail, headers=headers)
+
+class ValidationError(AppException):
+    """Validation error"""
+    def __init__(self, detail: str):
+        super().__init__(status_code=400, detail=detail)
+
+class NotFoundError(AppException):
+    """Resource not found error"""
+    def __init__(self, resource: str):
+        super().__init__(status_code=404, detail=f"{resource} not found")
+
+class ConflictError(AppException):
+    """Conflict error"""
+    def __init__(self, detail: str):
+        super().__init__(status_code=409, detail=detail)
+
+# Usage example (no hardcoding)
+def get_user(user_id: int) -> User:
+    user = repository.find_by_id(user_id)
+    if not user:
+        # ❌ NEVER: return {"error": "User not found"}  # Hardcoded error
+        # ✅ CORRECT:
+        raise NotFoundError("User")
+    return user
+```
+
+## Security Rules
+
+### Environment Variables and Secret Management
+**CRITICAL**: Rules for handling sensitive information
+
+```python
+# src/config.py
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import Optional
+
+class Settings(BaseSettings):
+    """Application settings"""
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False
+    )
+
+    # API settings
+    api_key: str
+    secret_key: str
+
+    # Database settings
+    database_url: str
+
+    # Optional settings
+    debug: bool = False
+    cors_origins: list[str] = ["http://localhost:3000"]
+
+    # Test settings
+    testing: bool = False
+
+    @property
+    def is_production(self) -> bool:
+        """Check if production environment"""
+        return not (self.debug or self.testing)
+
+settings = Settings()
+```
+
+**NEVER**:
+- Hardcoded credentials
+- Commit `.env` files
+- Output sensitive information to logs
+- Special authentication bypass for tests
+
+## Common Commands Reference
+
+```bash
+# Development environment
+uv run uvicorn src.myapp.main:app --reload --host 0.0.0.0 --port 8000
+
+# Test execution (recommended order)
+nox -s test_unit                              # Unit tests first
+nox -s test_api                               # API tests
+nox -s test_e2e                               # E2E tests
+nox -s test                                   # All tests at once
+
+# Specific test execution
+nox -s test -- tests/unit/test_specific.py    # Specific file
+nox -s test -- -k "test_create"               # Filter by name
+nox -s test -- -x                             # Stop at first failure
+nox -s test -- --lf                           # Last failed only
+
+# Quality checks
+nox                                           # All sessions
+nox -s format lint typecheck                  # Multiple sessions
+nox -s coverage                               # Coverage check
+nox -s clean_debug                            # Debug code detection
+
+# Git operations
+git add -A && git commit                      # Interactive commit
+git push origin feature/123-new-feature       # Branch push
+
+# Dependencies
+uv add fastapi                                # Add production dependency
+uv add --dev pytest-mock                      # Add dev dependency
+uv sync                                       # Sync dependencies
+```
+
+## CLAUDE.MD Maintenance
+
+### Update Timing
+**YOU MUST** update CLAUDE.MD in the following cases:
+1. Discovery of new development patterns or best practices
+2. Establishment of solutions for recurring problems
+3. Addition of new rules through team consensus
+4. Tool or library updates
+5. Improvement or adjustment of test strategies
+
+### Update Method
+```bash
+# Add learning from sessions
+# Input with "#" prefix in messages
+# Example: # Add new pattern for async testing with pytest-asyncio
+
+# Direct editing
+/memory project  # Open CLAUDE.MD in editor
+```
+
+### Version Control
+- CLAUDE.MD must be under Git management
+- Document reasons in commit messages for important changes
+- Team-wide impact changes should be reviewed via PR
+
+## Development Iron Rules
+
+1. **Test First, Always** - Write tests in E2E→API→Unit order
+2. **Implementation: Concrete to Abstract** - Implement in Unit→API→E2E order
+3. **No Cheating** - Don't pass tests with hardcoding or logs
+4. **Debug Logs are Temporary** - Must remove after use
+5. **No Implementation Without Planning** - Always execute 4 phases
+6. **Quality Gate Compliance** - Pass all nox checks before commit
+7. **Progress Visualization** - Always update PROGRESS.md
+8. **Refer to Official Documentation** - Don't guess, always check official information
+9. **Specific Errors** - Provide clear error information with custom exceptions
+10. **Security First** - Manage sensitive information with environment variables
+
+## Troubleshooting
+
+### Common Problems and Solutions
+
+#### Test Execution Order Error
+```python
+# Problem: Started writing unit tests first
+# Solution: Don't commit yet, rewrite starting from E2E tests
+# Steps:
+# 1. Temporarily save existing tests with different names
+# 2. Recreate in E2E → API → Unit order
+# 3. Properly incorporate saved test content
+```
+
+#### Hardcoding Temptation
+```python
+# Problem: Tempted to return specific values just to pass tests
+# Solution: Review test expectations or implement correctly
+
+# ❌ Succumbed to temptation
+def calculate_discount(price, customer_type):
+    if price == 1000 and customer_type == "premium":
+        return 100  # Test case expected value
+
+# ✅ Correct implementation
+def calculate_discount(price, customer_type):
+    discount_rates = {
+        "premium": 0.1,
+        "regular": 0.05,
+        "new": 0.0
+    }
+    rate = discount_rates.get(customer_type, 0.0)
+    return price * rate
+```
+
+#### Forgotten Debug Logs
+```bash
+# Problem: print statements remain
+# Solution: Check with nox
+nox -s clean_debug
+
+# Manual check
+grep -r "print(" src/ --include="*.py"
+grep -r "console\." src/ --include="*.py"
+grep -r "TODO" src/ --include="*.py"
+grep -r "FIXME" src/ --include="*.py"
+```
+
+#### Import Error
+```python
+# Problem: ModuleNotFoundError
+# Solution: Check PYTHONPATH configuration
+export PYTHONPATH="${PYTHONPATH}:${PWD}/src"
+
+# Or auto-configure during uv execution
+uv run python -c "import sys; print(sys.path)"
+```
+
+#### Type Check Error
+```python
+# Problem: Pyright error: "Variable not annotated"
+# Solution: Add explicit type annotations
+result: Optional[User] = None  # Good
+result = None  # Bad
+
+# Problem: "Unknown type"
+# Solution: Proper imports and type definitions
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from src.models.user import User
+```
+
+---
+
+**Remember**:
+- Tests: Abstract to Concrete (E2E → API → Unit)
+- Implementation: Concrete to Abstract (Unit → API → E2E)
+- Passing tests with hardcoding is the beginning of technical debt
+- This document is living documentation. Evolve it as the project grows.

@@ -18,6 +18,22 @@ if ! command -v uv >/dev/null 2>&1; then
     fi
 fi
 
+# npmの権限問題を解決するため、グローバルディレクトリをユーザーディレクトリに設定
+if command -v npm >/dev/null 2>&1; then
+    echo "Setting up npm global directory..."
+    mkdir -p "$HOME/.npm-global"
+    npm config set prefix "$HOME/.npm-global"
+    export PATH="$HOME/.npm-global/bin:$PATH"
+
+    # Claude Codeを安全にインストール
+    if ! command -v claude-code >/dev/null 2>&1; then
+        echo "Installing Claude Code..."
+        npm install -g @anthropic-ai/claude-code
+    else
+        echo "Claude Code is already installed"
+    fi
+fi
+
 # 権限設定
 sudo chown -R vscode:vscode .
 

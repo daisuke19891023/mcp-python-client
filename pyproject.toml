@@ -1,7 +1,7 @@
 [project]
-name = "{{PROJECT_NAME}}"
+name = "mcp-pyhon-client"
 version = "0.1.0"
-description = "{{PROJECT_DESCRIPTION}}"
+description = "MCP Python Client"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -12,7 +12,7 @@ dependencies = [
 ] # Populated by user or later steps if needed
 
 [project.scripts]
-{{PROJECT_NAME_SLUG}} = "{{LIBRARY_NAME}}.main:main"
+mcp-pyhon-client = "mcp_cli.main:main"
 
 [project.optional-dependencies]
 docs = [
@@ -137,7 +137,7 @@ reportMissingTypeStubs = false
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
-addopts = "-v --cov=src/alpha_lib -ra --strict-markers" # This will be replaced by setup.sh
+addopts = "-v --cov=src/mcp_cli/alpha_lib -ra --strict-markers" # This will be replaced by setup.sh
 markers = [
   "slow: marks tests as slow (deselect with '-m \"not slow\"')",
   "integration: marks integration tests"
