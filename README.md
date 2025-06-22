@@ -1,6 +1,6 @@
-# {{PROJECT_NAME}}
+# mcp-pyhon-client
 
-{{PROJECT_DESCRIPTION}}
+MCP Python Client
 
 ## Features
 
@@ -27,7 +27,7 @@
 ```bash
 # Clone the repository
 git clone <your-repo-url>
-cd {{PROJECT_NAME_SLUG}}
+cd mcp-pyhon-client
 
 # Install Python dependencies
 uv pip install -e ".[dev]"
@@ -84,16 +84,16 @@ mkdocs serve
 
 ```bash
 # Build Docker image
-docker build -t {{PROJECT_NAME_SLUG}} .
+docker build -t mcp-pyhon-client .
 
 # Run Docker container
-docker run {{PROJECT_NAME_SLUG}}
+docker run mcp-pyhon-client
 ```
 
 ## Project Structure
 
 ```
-{{PROJECT_NAME_SLUG}}/
+mcp-pyhon-client/
 ├── src/                    # Source code
 ├── tests/                  # Test files
 ├── docs/                   # Documentation
@@ -170,7 +170,7 @@ cz bump
 
 ## License
 
-This project is licensed under the {{LICENSE_TYPE}} License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 # 開発環境セットアップ手順
 

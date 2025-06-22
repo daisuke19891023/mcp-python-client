@@ -28,7 +28,22 @@ source ./license_utils.sh
 
 # --- Interactive Prompts ---
 info "プロジェクト情報を入力してください:"
-read -p "プロジェクト名: " PROJECT_NAME
+
+# Input validation for PROJECT_NAME (Python package name format)
+while true; do
+    read -p "プロジェクト名 (例: my-project, my_project, myproject): " PROJECT_NAME
+    if [[ -z "$PROJECT_NAME" ]]; then
+        echo "エラー: プロジェクト名は空にできません。"
+    elif ! [[ "$PROJECT_NAME" =~ ^[a-zA-Z][a-zA-Z0-9_-]*$ ]]; then
+        echo "エラー: プロジェクト名が無効です。"
+        echo "   - 英数字、ハイフン(-)、アンダースコア(_)のみ使用可能"
+        echo "   - 先頭は英字である必要があります"
+        echo "   - 例: my-project, my_project, myproject"
+    else
+        break
+    fi
+done
+
 read -p "プロジェクトの説明: " PROJECT_DESCRIPTION
 
 # Input validation for LIBRARY_NAME
@@ -66,7 +81,6 @@ touch "src/$LIBRARY_NAME/__init__.py"
 
 # Create main.py file for the library
 cat > "src/$LIBRARY_NAME/main.py" << EOF
-#!/usr/bin/env python3
 """Main entry point for $PROJECT_NAME."""
 
 import sys
@@ -172,6 +186,10 @@ fi
 # Install Claude Code if not already installed
 if ! command_exists claude-code; then
     info "Claude Codeをインストールしています..."
+    # npmの権限問題を解決するため、グローバルディレクトリをユーザーディレクトリに設定
+    mkdir -p "$HOME/.npm-global"
+    npm config set prefix "$HOME/.npm-global"
+    export PATH="$HOME/.npm-global/bin:$PATH"
     npm install -g @anthropic-ai/claude-code || error "Claude Codeのインストールに失敗しました"
     success "Claude Codeがインストールされました"
 else
