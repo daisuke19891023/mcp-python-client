@@ -1,0 +1,729 @@
+# Cursor Rules for {{PROJECT_NAME}}
+
+## プロジェクト概要
+このプロジェクトは{{PROJECT_DESCRIPTION}}です。
+
+## 重要な参照リソース
+
+**YOU MUST** 実装時に以下の公式ドキュメントを参照すること：
+- Python公式: https://docs.python.org/3/
+- FastAPI: https://fastapi.tiangolo.com/
+- Pydantic v2: https://docs.pydantic.dev/latest/
+- pytest: https://docs.pytest.org/en/stable/
+- uv: https://github.com/astral-sh/uv#documentation
+- nox: https://nox.thea.codes/en/stable/
+- Ruff: https://docs.astral.sh/ruff/
+- Pyright: https://github.com/microsoft/pyright
+
+## 開発環境とツール
+
+### 依存関係管理 (uv)
+**CRITICAL**: 全ての依存関係管理は`uv`を使用すること。`pip`や`poetry`は使用禁止。
+
+```bash
+# プロジェクト初期化
+uv init
+
+# 依存関係の追加
+uv add <package>
+
+# 開発用依存関係の追加
+uv add --dev <package>
+
+# 依存関係のインストール
+uv sync
+
+# 仮想環境でコマンド実行
+uv run <command>
+```
+
+### タスク実行 (nox)
+**YOU MUST** 全てのツール実行は`nox`セッションを通じて行うこと：
+
+```bash
+# 利用可能なセッション一覧
+nox --list
+
+# 特定のセッション実行
+nox -s <session_name>
+
+# 例：
+nox -s test          # テスト実行
+nox -s format_code   # コードフォーマット
+nox -s lint          # リンティング
+nox -s typing        # 型チェック
+nox -s security      # セキュリティチェック
+nox -s docs          # ドキュメント生成
+nox -s ci            # 全CIチェック
+nox -s all_checks    # 全品質チェック
+```
+
+### プロジェクト構造
+**NEVER** この構造から逸脱しないこと：
+```
+{{PROJECT_NAME_SLUG}}/
+├── .cursor/              # Cursor IDE設定
+│   └── rules             # Cursor IDEルール
+├── .github/              # GitHub Actions
+│   └── workflows/
+├── src/                  # アプリケーションコード
+│   └── <package_name>/
+├── tests/                # テストコード
+│   ├── unit/            # 単体テスト
+│   ├── api/             # APIテスト
+│   └── e2e/             # E2Eテスト
+├── docs/                 # ドキュメント
+├── constraints/          # 依存関係制約
+├── .gitignore
+├── pyproject.toml        # プロジェクト設定
+├── noxfile.py            # noxタスク定義
+├── mkdocs.yml            # ドキュメント設定
+├── Dockerfile            # Docker設定
+└── README.md
+```
+
+## 開発ワークフロー - 4フェーズアプローチ
+
+### CRITICAL: 新機能開発・バグ修正は必ず以下の4フェーズで実行
+
+#### フェーズ1: 探索 (Explore) - 情報収集
+**DO NOT** このフェーズでコードを変更しないこと。
+
+実行内容：
+1. 関連ファイルの読み込み（`src/`, `tests/`, `pyproject.toml`）
+2. 既存の実装パターンの理解
+3. 依存関係の確認
+4. 影響範囲の特定
+
+完了確認文：
+```
+「探索フェーズ完了。以下を確認しました：
+- 関連ファイル: [ファイルリスト]
+- 既存パターン: [パターン概要]
+- 影響範囲: [影響を受ける部分]」
+```
+
+#### フェーズ2: 計画 (Plan) - 実装設計
+**YOU MUST** 以下の形式で計画を作成：
+
+```markdown
+## 実装計画: [機能名/バグ修正名]
+
+### 1. 概要
+[何を実装/修正するか]
+
+### 2. ファイル変更
+- 新規作成:
+  - `path/to/new/file.py` - [目的]
+- 修正:
+  - `path/to/existing/file.py` - [変更内容]
+
+### 3. テスト計画（実装順序）
+1. E2Eテスト（最も抽象的）:
+   - `test_user_complete_journey` - ユーザー登録から削除までの完全フロー
+2. APIテスト（中間層）:
+   - `test_create_user_endpoint` - ユーザー作成API
+   - `test_get_user_endpoint` - ユーザー取得API
+3. 単体テスト（最も具体的）:
+   - `test_user_model_validation` - モデルバリデーション
+   - `test_user_service_create` - サービス層のロジック
+
+### 4. 実装順序
+1. テストケース作成（E2E → API → Unit）
+2. 実装（Unit → API → E2E）
+3. 全テストがパスすることを確認
+4. リファクタリング
+5. ドキュメント更新
+```
+
+#### フェーズ3: 実装 (Implement) - TDD実行
+**NEVER** テストを書かずに実装を開始しないこと。
+
+#### フェーズ4: コミット (Commit) - 変更の記録
+**YOU MUST** 全てのチェックが完了してからコミット。
+
+## テスト駆動開発（TDD）の厳格な実施
+
+### CRITICAL: テスト作成と実装の順序
+
+**テスト作成順序**（抽象的 → 具体的）：
+1. **E2Eテスト** - システム全体の振る舞いを定義
+2. **APIテスト** - エンドポイントレベルの仕様を定義
+3. **単体テスト** - 個々のコンポーネントの詳細仕様を定義
+
+**実装順序**（具体的 → 抽象的）：
+1. **単体実装** - モデル、サービス、ユーティリティ
+2. **API実装** - エンドポイント、ミドルウェア
+3. **統合** - 全体を結合してE2Eテストをパス
+
+### テスト誤魔化し防止規則
+
+**CRITICAL - 以下は絶対禁止**：
+```python
+# ❌ 禁止例1: テストを通すためだけのハードコード
+def calculate_total(items):
+    # NEVER DO THIS
+    if items == [{"price": 100}, {"price": 200}]:
+        return 300  # テストケースの期待値をハードコード
+
+# ❌ 禁止例2: テスト時のみの特別な処理
+def process_order(order_id):
+    # NEVER DO THIS
+    if order_id == "test_order_123":  # テストデータを特別扱い
+        return {"status": "success"}
+
+# ❌ 禁止例3: ログ出力で誤魔化す
+def validate_input(data):
+    # NEVER DO THIS
+    print("Validation passed!")  # 実際の検証なしにログだけ出力
+    return True
+```
+
+**✅ 正しい実装例**：
+```python
+# 正しい実装: ロジックを適切に実装
+def calculate_total(items):
+    return sum(item.get("price", 0) for item in items)
+
+# デバッグ時の一時的なprint（実装完了後は削除）
+def complex_calculation(data):
+    print(f"DEBUG: Input data: {data}")  # 一時的なデバッグ
+    result = perform_calculation(data)
+    print(f"DEBUG: Result: {result}")    # 一時的なデバッグ
+    # TODO: デバッグ完了後、上記のprint文を削除
+    return result
+```
+
+### TDD実装の詳細手順
+
+#### ステップ1: E2Eテストから開始
+```python
+# tests/e2e/test_product_management.py
+import pytest
+from fastapi.testclient import TestClient
+
+class TestProductManagement:
+    """商品管理の完全なワークフローテスト"""
+
+    def test_complete_product_lifecycle(self, client, auth_headers):
+        """商品の作成から削除までの完全なライフサイクル"""
+        # 1. 商品作成
+        create_response = client.post(
+            "/api/v1/products",
+            json={
+                "name": "テスト商品",
+                "price": 1000,
+                "stock": 100
+            },
+            headers=auth_headers
+        )
+        assert create_response.status_code == 201
+        product_id = create_response.json()["id"]
+
+        # 2. 商品情報取得
+        get_response = client.get(f"/api/v1/products/{product_id}")
+        assert get_response.status_code == 200
+        assert get_response.json()["name"] == "テスト商品"
+
+        # 3. 在庫更新
+        update_response = client.patch(
+            f"/api/v1/products/{product_id}",
+            json={"stock": 50},
+            headers=auth_headers
+        )
+        assert update_response.status_code == 200
+
+        # 4. 商品削除
+        delete_response = client.delete(
+            f"/api/v1/products/{product_id}",
+            headers=auth_headers
+        )
+        assert delete_response.status_code == 204
+```
+
+#### ステップ2: APIテストを追加
+```python
+# tests/api/test_products_api.py
+class TestProductsAPI:
+    """商品APIの個別エンドポイントテスト"""
+
+    def test_create_product_validates_input(self, client, auth_headers):
+        """商品作成時の入力検証"""
+        # 不正なデータでのリクエスト
+        response = client.post(
+            "/api/v1/products",
+            json={
+                "name": "",  # 空の名前
+                "price": -100  # 負の価格
+            },
+            headers=auth_headers
+        )
+        assert response.status_code == 422
+        errors = response.json()["detail"]
+        assert any(error["loc"] == ["body", "name"] for error in errors)
+        assert any(error["loc"] == ["body", "price"] for error in errors)
+```
+
+#### ステップ3: 単体テストを追加
+```python
+# tests/unit/test_product_model.py
+from src.models.product import Product
+from pydantic import ValidationError
+
+class TestProductModel:
+    """商品モデルの単体テスト"""
+
+    def test_product_creation_with_valid_data(self):
+        """正常なデータでの商品作成"""
+        product = Product(
+            name="テスト商品",
+            price=1000,
+            stock=100
+        )
+        assert product.name == "テスト商品"
+        assert product.price == 1000
+        assert product.stock == 100
+
+    def test_product_validation_errors(self):
+        """バリデーションエラーの確認"""
+        with pytest.raises(ValidationError) as exc_info:
+            Product(name="", price=-100, stock=-10)
+
+        errors = exc_info.value.errors()
+        assert len(errors) == 3
+```
+
+#### ステップ4: 実装（Unit → API → 統合）
+```python
+# 1. まず単体実装（src/models/product.py）
+from pydantic import BaseModel, Field, field_validator
+
+class Product(BaseModel):
+    """商品モデル"""
+    name: str = Field(..., min_length=1, max_length=100)
+    price: float = Field(..., gt=0)
+    stock: int = Field(..., ge=0)
+
+    @field_validator("name")
+    @classmethod
+    def name_must_not_be_empty(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("商品名は空にできません")
+        return v.strip()
+
+# 2. 次にAPI実装（src/api/v1/products.py）
+from fastapi import APIRouter, Depends, HTTPException
+from src.models.product import Product
+from src.services.product_service import ProductService
+
+router = APIRouter()
+
+@router.post("/", status_code=201)
+async def create_product(
+    product: Product,
+    service: ProductService = Depends(),
+    current_user: User = Depends(get_current_user)
+):
+    """商品を作成"""
+    return await service.create_product(product, current_user)
+
+# 3. 最後に全体を統合してE2Eテストがパスすることを確認
+```
+
+### デバッグログの管理
+
+**一時的なデバッグは許可、ただし必ず削除**：
+```python
+# デバッグ時（一時的に追加）
+def complex_business_logic(data):
+    print(f"=== DEBUG START ===")
+    print(f"Input: {data}")
+
+    intermediate_result = step1(data)
+    print(f"After step1: {intermediate_result}")
+
+    final_result = step2(intermediate_result)
+    print(f"Final result: {final_result}")
+    print(f"=== DEBUG END ===")
+
+    return final_result
+
+# デバッグ完了後（必ず削除）
+def complex_business_logic(data):
+    intermediate_result = step1(data)
+    final_result = step2(intermediate_result)
+    return final_result
+```
+
+**デバッグログ削除チェックリスト**：
+- [ ] print文を全て削除
+- [ ] console.log相当の出力を削除
+- [ ] デバッグ用のコメントアウトされたコードを削除
+- [ ] TODO/FIXMEコメントの解決
+
+## コーディング規約
+
+### Python
+- Python 3.12+を使用
+- 型ヒントを必ず使用する
+- docstringはGoogle形式を使用
+- 最大行長は88文字（Blackの設定に合わせる）
+- インポートは以下の順序で整理：
+  1. 標準ライブラリ
+  2. サードパーティライブラリ
+  3. ローカルアプリケーション/ライブラリ
+
+### ファイル命名
+- ファイル名はsnake_case
+- クラス名はPascalCase
+- 関数・変数名はsnake_case
+- 定数はUPPER_SNAKE_CASE
+
+### テスト
+- テストファイルは`tests/`ディレクトリに配置
+- テストファイル名は`test_`で始める
+- テスト関数名は`test_`で始める
+- 各関数・クラスに対応するテストを作成
+
+### ドキュメント
+- 公開APIには必ずdocstringを記述
+- README.mdは日本語で記述
+- コードコメントは日本語で記述
+
+## コード品質基準
+
+### Pyrightによる型チェック
+**YOU MUST** 全てのコードがPyrightの`strict`モードでエラーなしであること：
+
+```python
+# pyrightconfig.json の設定例
+{
+    "include": ["src", "tests"],
+    "exclude": ["**/__pycache__"],
+    "typeCheckingMode": "strict",
+    "pythonVersion": "3.12",
+    "reportUnknownMemberType": false,
+    "reportUnknownArgumentType": false
+}
+```
+
+型アノテーション例：
+```python
+from typing import Optional, List, Dict, Any, TypeVar, Generic
+from pydantic import BaseModel, Field, ConfigDict
+
+T = TypeVar("T")
+
+class PaginatedResponse(BaseModel, Generic[T]):
+    """ページネーションレスポンス"""
+    model_config = ConfigDict(from_attributes=True)
+
+    items: List[T]
+    total: int
+    page: int = Field(..., ge=1)
+    per_page: int = Field(..., ge=1, le=100)
+
+    @property
+    def total_pages(self) -> int:
+        """総ページ数を計算"""
+        return (self.total + self.per_page - 1) // self.per_page
+```
+
+### Ruffによるフォーマットとリンティング
+設定は`pyproject.toml`に記述：
+```toml
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "B", "I", "N", "UP", "S", "A", "C4", "DTZ", "ISC", "PIE", "PT", "RET", "SIM", "TCH", "ARG", "PTH"]
+ignore = ["E501"]  # line-lengthで制御
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+```
+
+## Git操作規則
+
+### Conventional Commitsの厳格な適用
+**NEVER** 規約外のコミットメッセージを使用しないこと。
+
+形式：
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+具体例：
+```bash
+# 機能追加
+feat(auth): JWT認証機能を実装
+
+- アクセストークンとリフレッシュトークンの発行
+- トークン検証ミドルウェアの追加
+- 認証エラーハンドリングの実装
+
+Closes #123
+
+# バグ修正
+fix(api): ユーザー削除時の外部キー制約エラーを修正
+
+関連するプロフィール情報を先に削除するように修正
+
+# テスト追加
+test(product): 商品管理のE2E/API/単体テストを実装
+
+- E2Eテスト: 商品のライフサイクル全体
+- APIテスト: 各エンドポイントの検証
+- 単体テスト: モデルとサービスのロジック
+```
+
+### ブランチ戦略
+```bash
+# ブランチ作成例
+git checkout -b feature/123-user-authentication
+git checkout -b fix/456-database-connection-error
+git checkout -b test/789-increase-coverage
+```
+
+## 品質保証チェックリスト
+
+### コミット前の必須確認
+```bash
+# 全てのチェックを一括実行
+nox -s all_checks
+
+# テストの段階的実行（推奨）
+nox -s test          # 全テスト実行
+nox -s lint          # リンティング
+nox -s format_code   # フォーマット
+nox -s typing        # 型チェック
+nox -s security      # セキュリティチェック
+```
+
+### プルリクエスト前の確認
+- [ ] 全てのnoxセッションがパス
+- [ ] テストカバレッジが90%以上
+- [ ] デバッグログが削除済み
+- [ ] 新機能に対する3層のテスト（E2E/API/単体）が追加済み
+- [ ] 破壊的変更がある場合は明記
+
+## エラーハンドリング
+
+### カスタム例外の使用
+```python
+# src/core/exceptions.py
+from fastapi import HTTPException
+from typing import Any, Dict, Optional
+
+class AppException(HTTPException):
+    """アプリケーション基底例外"""
+    def __init__(
+        self,
+        status_code: int,
+        detail: str,
+        headers: Optional[Dict[str, Any]] = None
+    ):
+        super().__init__(status_code=status_code, detail=detail, headers=headers)
+
+class ValidationError(AppException):
+    """バリデーションエラー"""
+    def __init__(self, detail: str):
+        super().__init__(status_code=400, detail=detail)
+
+class NotFoundError(AppException):
+    """リソース未検出エラー"""
+    def __init__(self, resource: str):
+        super().__init__(status_code=404, detail=f"{resource} not found")
+
+class ConflictError(AppException):
+    """競合エラー"""
+    def __init__(self, detail: str):
+        super().__init__(status_code=409, detail=detail)
+
+# 使用例（ハードコード禁止）
+def get_user(user_id: int) -> User:
+    user = repository.find_by_id(user_id)
+    if not user:
+        # ❌ NEVER: return {"error": "User not found"}  # ハードコードしたエラー
+        # ✅ CORRECT:
+        raise NotFoundError("User")
+    return user
+```
+
+## セキュリティ規則
+
+### 環境変数とシークレット管理
+**CRITICAL**: 機密情報の取り扱い規則
+
+```python
+# src/config.py
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import Optional
+
+class Settings(BaseSettings):
+    """アプリケーション設定"""
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False
+    )
+
+    # API設定
+    api_key: str
+    secret_key: str
+
+    # データベース設定
+    database_url: str
+
+    # オプション設定
+    debug: bool = False
+    cors_origins: list[str] = ["http://localhost:3000"]
+
+    # テスト設定
+    testing: bool = False
+
+    @property
+    def is_production(self) -> bool:
+        """本番環境かどうか"""
+        return not (self.debug or self.testing)
+
+settings = Settings()
+```
+
+**NEVER**:
+- ハードコーディングされた認証情報
+- `.env`ファイルのコミット
+- ログへの機密情報出力
+- テスト用の特別な認証バイパス
+
+## よく使うコマンドリファレンス
+
+```bash
+# 開発環境
+uv run uvicorn src.myapp.main:app --reload --host 0.0.0.0 --port 8000
+
+# テスト実行（推奨順序）
+nox -s test                              # 全テスト一括
+
+# 特定のテスト実行
+nox -s test -- tests/unit/test_specific.py    # 特定ファイル
+nox -s test -- -k "test_create"               # 名前でフィルタ
+nox -s test -- -x                             # 最初の失敗で停止
+nox -s test -- --lf                           # 前回失敗したもののみ
+
+# 品質チェック
+nox -s all_checks                            # 全セッション実行
+nox -s format_code lint typing               # 複数セッション指定
+nox -s security                              # セキュリティチェック
+
+# Git操作
+git add -A && git commit                      # 対話的コミット
+git push origin feature/123-new-feature       # ブランチプッシュ
+
+# 依存関係
+uv add fastapi                                # 本番依存関係追加
+uv add --dev pytest-mock                      # 開発依存関係追加
+uv sync                                       # 依存関係同期
+```
+
+## 開発の鉄則
+
+1. **テストファースト、常に** - E2E→API→単体の順でテストを書く
+2. **実装は具体から抽象へ** - 単体→API→E2Eの順で実装
+3. **誤魔化し厳禁** - ハードコードやログでテストを通さない
+4. **デバッグログは一時的** - 使用後は必ず削除
+5. **計画なき実装なし** - 4フェーズを必ず実行
+6. **品質ゲートの遵守** - noxチェックを全てパスしてからコミット
+7. **公式ドキュメント参照** - 推測せず、必ず公式情報を確認
+8. **エラーは具体的に** - カスタム例外で明確なエラー情報を提供
+9. **セキュリティファースト** - 機密情報は環境変数で管理
+10. **日本語環境での開発** - コミットメッセージやコメントは日本語で記述
+
+## トラブルシューティング
+
+### よくある問題と解決法
+
+#### テストの実行順序エラー
+```python
+# 問題: 単体テストから書いてしまった
+# 解決: 一旦コミットせず、E2Eテストから書き直す
+# 手順:
+# 1. 既存のテストを一時的に別名で保存
+# 2. E2E → API → 単体の順で再作成
+# 3. 保存したテストの内容を適切に組み込む
+```
+
+#### ハードコードの誘惑
+```python
+# 問題: テストを通すために特定の値を返したくなる
+# 解決: テストの期待値を見直すか、実装を正しく行う
+
+# ❌ 誘惑に負けた例
+def calculate_discount(price, customer_type):
+    if price == 1000 and customer_type == "premium":
+        return 100  # テストケースの期待値
+
+# ✅ 正しい実装
+def calculate_discount(price, customer_type):
+    discount_rates = {
+        "premium": 0.1,
+        "regular": 0.05,
+        "new": 0.0
+    }
+    rate = discount_rates.get(customer_type, 0.0)
+    return price * rate
+```
+
+#### デバッグログの消し忘れ
+```bash
+# 問題: print文が残っている
+# 解決: 手動でチェック
+grep -r "print(" src/ --include="*.py"
+grep -r "console\." src/ --include="*.py"
+grep -r "TODO" src/ --include="*.py"
+grep -r "FIXME" src/ --include="*.py"
+```
+
+#### Import Error
+```python
+# 問題: ModuleNotFoundError
+# 解決: PYTHONPATH設定を確認
+export PYTHONPATH="${PYTHONPATH}:${PWD}/src"
+
+# または、uvの実行時に自動設定
+uv run python -c "import sys; print(sys.path)"
+```
+
+#### 型チェックエラー
+```python
+# 問題: Pyright error: "Variable not annotated"
+# 解決: 明示的な型アノテーションを追加
+result: Optional[User] = None  # Good
+result = None  # Bad
+
+# 問題: "Unknown type"
+# 解決: 適切なインポートと型定義
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from src.models.user import User
+```
+
+## 注意事項
+- このプロジェクトは日本語環境で開発
+- コミットメッセージやコメントは日本語で記述
+- 国際化対応が必要な場合は別途検討
+- このドキュメントは生きた文書です。プロジェクトの成長とともに進化させてください
+
+---
+**Remember**:
+- テストは抽象から具体へ（E2E → API → Unit）
+- 実装は具体から抽象へ（Unit → API → E2E）
+- ハードコードでテストを通すことは技術的負債の始まり
+- このドキュメントは生きた文書です。プロジェクトの成長とともに進化させてください。

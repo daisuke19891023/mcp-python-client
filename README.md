@@ -20,6 +20,7 @@
 
 -   Python 3.12+
 -   uv (Python package manager)
+-   Node.js 18+ (npm または yarn)
 
 ### Installation
 
@@ -28,8 +29,16 @@
 git clone <your-repo-url>
 cd {{PROJECT_NAME_SLUG}}
 
-# Install dependencies
+# Install Python dependencies
 uv pip install -e ".[dev]"
+
+# Install Node.js dependencies (if any)
+npm install
+# or
+yarn install
+
+# Install Claude Code globally
+npm install -g @anthropic-ai/claude-code
 
 # Install pre-commit hooks
 pre-commit install
@@ -90,6 +99,8 @@ docker run {{PROJECT_NAME_SLUG}}
 ├── docs/                   # Documentation
 ├── .github/                # GitHub configuration
 ├── .vscode/                # VS Code settings
+├── .cursor/                # Cursor IDE configuration
+│   └── rules               # Cursor IDE rules
 ├── constraints/            # Dependency constraints
 ├── pyproject.toml          # Project configuration
 ├── noxfile.py              # Nox tasks
@@ -97,6 +108,18 @@ docker run {{PROJECT_NAME_SLUG}}
 ├── Dockerfile              # Docker configuration
 └── README.md               # This file
 ```
+
+### Cursor IDE サポート
+
+このプロジェクトには`.cursor/rules`ファイルが含まれており、Cursor IDE でプロジェクト固有のルールを設定しています。これにより、AI アシスタントがプロジェクトの規約に従ったコードを生成するようになります。
+
+主な設定内容：
+
+-   コーディング規約（Python、ファイル命名、テスト等）
+-   開発ツールの使用方法
+-   セキュリティガイドライン
+-   コミット規約
+-   アーキテクチャ指針
 
 ## Contributing
 

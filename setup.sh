@@ -95,6 +95,11 @@ sed -i "s/{{LICENSE_TYPE}}/$LICENSE_TYPE/g" README.md
 sed -i "s/{{PROJECT_NAME_SLUG}}/$PROJECT_NAME_SLUG/g" README.md
 success "README.mdが更新されました"
 
+info ".cursor/rulesを更新しています..."
+sed -i "s/{{PROJECT_NAME}}/$PROJECT_NAME/g" .cursor/rules
+sed -i "s/{{PROJECT_DESCRIPTION}}/$PROJECT_DESCRIPTION/g" .cursor/rules
+success ".cursor/rulesが更新されました"
+
 info "pyproject.tomlを更新しています..."
 sed -i "s/{{PROJECT_NAME}}/$PROJECT_NAME/g" pyproject.toml
 sed -i "s/{{PROJECT_DESCRIPTION}}/$PROJECT_DESCRIPTION/g" pyproject.toml
@@ -138,6 +143,38 @@ if ! command_exists uv; then
     success "uvがインストールされました"
 else
     info "uvは既にインストールされています"
+fi
+
+# Install Node.js if not already installed
+if ! command_exists node; then
+    info "Node.jsをインストールしています..."
+    # Check if we're on Ubuntu/Debian
+    if command_exists apt; then
+        # Install Node.js using NodeSource repository
+        curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - || error "NodeSourceリポジトリの設定に失敗しました"
+        sudo apt-get install -y nodejs || error "Node.jsのインストールに失敗しました"
+    elif command_exists brew; then
+        # macOS with Homebrew
+        brew install node || error "Node.jsのインストールに失敗しました"
+    elif command_exists yum; then
+        # CentOS/RHEL/Fedora
+        curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash - || error "NodeSourceリポジトリの設定に失敗しました"
+        sudo yum install -y nodejs || error "Node.jsのインストールに失敗しました"
+    else
+        error "サポートされていないOSです。手動でNode.jsをインストールしてください。"
+    fi
+    success "Node.jsがインストールされました"
+else
+    info "Node.jsは既にインストールされています"
+fi
+
+# Install Claude Code if not already installed
+if ! command_exists claude-code; then
+    info "Claude Codeをインストールしています..."
+    npm install -g @anthropic-ai/claude-code || error "Claude Codeのインストールに失敗しました"
+    success "Claude Codeがインストールされました"
+else
+    info "Claude Codeは既にインストールされています"
 fi
 
 # Install target Python version (uncomment and replace X.X with desired version)
