@@ -74,7 +74,7 @@ pygments==2.19.1
     #   diff-cover
     #   mkdocs-material
     #   pytest
-pymdown-extensions==10.15
+pymdown-extensions==10.16.1
     # via mkdocs-material
 pytest==8.4.1
     # via
