@@ -76,7 +76,7 @@ pygments==2.19.1
     # via
     #   mkdocs-material
     #   sphinx
-pymdown-extensions==10.15
+pymdown-extensions==10.16.1
     # via mkdocs-material
 python-dateutil==2.9.0.post0
     # via ghp-import
